@@ -18,8 +18,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// 在之后的开发中我们将在build time自动地生成这个版本号，现在暂时硬编码
-const version = "1.0.0"
+// 在之后的开发中我们将在build time伴随着git自动地生成这个版本号
+var (
+	// 表示执行时间，嵌入到二进制包中
+	buildTime string
+	version   string
+)
 
 // 自定义config结构体类型，监听的端口号，当前运行环境，数据库连接池，通过命令行交互
 // 加入对于连接池的配置属性来自定义连接池信息
@@ -98,7 +102,19 @@ func main() {
 		cfg.cors.trustedOrigins = strings.Fields(val)
 		return nil
 	})
+
+	// 为version创建一个flag
+	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	flag.Parse()
+
+	// if the version flag value is true,打印出版本号以及其他动态信息
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		// Print out the contents of the buildTime variable
+		fmt.Printf("Build time:\t%s\n", buildTime)
+		os.Exit(0)
+	}
 
 	// 使用jsonlog自定义初始化一个日志向标准输出流写信息，将日志封装为json类型
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
