@@ -26,7 +26,7 @@ func (app *application) serve() error {
 		ErrorLog: log.New(app.logger, "", 0),
 	}
 
-	// Create a shutdownError channel. Use this to receive any errors returned
+	// Create a shutdownError channel. Use this shutdownError receive any errors returned
 	// by the graceful Shutdown() function
 	shutdownError := make(chan error)
 

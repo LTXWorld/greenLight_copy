@@ -72,7 +72,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 			mu.Lock() // 下面这段代码互斥进行，不能多个请求同时访问map
 
-			// 检查ip是否已经存在于这个map中(ip-limiter),对map的一种断言判断
+			// 检查ip是否已经存在于这个map中(ip-client),对map的一种断言判断
 			if _, found := clients[ip]; !found {
 				clients[ip] = &client{
 					// 不再硬编码，而是使用main config内的

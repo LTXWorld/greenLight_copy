@@ -71,7 +71,7 @@ vendor:
 # ==================================================================================== #
 
 current_time = $(shell date "+%Y-%m-%dT%H:%M:%S")
-git_description = $(shell git describe --always --dirty)
+git_description = $(shell git describe --always --dirty --tags --long)
 linker_flags = '-s -X main.buildTime=$(current_time) -X main.version=$(git_description)'
 
 ## build/api: build the cmd/api application
@@ -80,3 +80,39 @@ build/api:
 	@echo 'Building cmd/api...'
 	go build -ldflags=$(linker_flags) -o ./bin/api ./cmd/api
 	GOOS=linux GOARCH=amd64 go build -ldflags=$(linker_flags) -o ./bin/linux_amd64/api ./cmd/api
+
+# ==================================================================================== #
+# PRODUCTION
+# ==================================================================================== #
+
+production_host_ip = '8.140.201.82'
+
+## production/connect: connect to the production server
+.PHONY: production/connect
+production/connect:
+	ssh ltGreenLight@${production_host_ip}
+
+## production/deploy/api: deploy the api to production
+.PHONY: production/deploy/api
+production/deploy/api:
+	rsync -rP --delete ./bin/linux_amd64/api ./migrations ltGreenLight@${production_host_ip}:~
+	ssh -t ltGreenLight@${production_host_ip} 'migrate -path ~/migrations -database $$GREENLIGHT_DB_DSN up'
+
+## production/configure/api.service: configure the production systemd api.service file
+.PHONY: production/configure/api.service
+production/configure/api.service:
+	rsync -P ./remote/production/api.service ltGreenLight@${production_host_ip}:~
+	ssh -t ltGreenLight@${production_host_ip} '\
+		sudo mv ~/api.service /etc/systemd/system/ \
+		&& sudo systemctl enable api \
+		&& sudo systemctl restart api \
+		'
+
+## production/configure/caddyfile: configure the production Caddyfile
+.PHONY: production/configure/caddyfile
+production/configure/caddyfile:
+	rsync -P ./remote/production/Caddyfile ltGreenLight@${production_host_ip}:~
+	ssh -t ltGreenLight@${production_host_ip} '\
+		sudo mv ~/Caddyfile /etc/caddy/ \
+		&& sudo systemctl reload caddy \
+		'

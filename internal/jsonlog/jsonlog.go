@@ -49,7 +49,7 @@ func New(out io.Writer, minLevel Level) *Logger {
 }
 
 // Declare some helper methods for writing log entries at the different levels
-// map用于包含你希望在日志entry中的任何属性
+// map用于包含你希望在日志entry中体现的任何属性
 func (l *Logger) PrintInfo(message string, properties map[string]string) {
 	l.print(LevelInfo, message, properties)
 }

@@ -25,6 +25,7 @@ type Token struct {
 	Scope     string    `json:"-"`
 }
 
+// 为指定用户id和类型产生Token
 func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
 	// We add the provided ttl duration parameter to the current time to get expiry time
 	token := &Token{
@@ -53,6 +54,7 @@ func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 	return token, nil
 }
 
+// 检查Token明文是否符合规范
 func ValidateTokenPlaintext(v *validator.Validator, tokenPlaintext string) {
 	v.Check(tokenPlaintext != "", "token", "must be provided")
 	v.Check(len(tokenPlaintext) == 26, "token", "must be 26 bytes long")

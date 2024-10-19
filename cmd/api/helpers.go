@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// 从当前请求上下文中获取id参数的值int
+// 从当前请求上下文中获取用户id
 func (app *application) readIDParam(r *http.Request) (int64, error) {
 	// 路由器解析请求时，任何的插值URL参数都将存储在上下文中
 	// 通过此方法获取包含这些参数名称和值的切片
