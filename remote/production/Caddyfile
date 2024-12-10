@@ -1,0 +1,4 @@
+http://8.140.201.82:8088 {
+    respond /debug/* "Not Permitted" 403
+    reverse_proxy localhost:4066
+}

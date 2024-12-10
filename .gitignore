@@ -1,0 +1,11 @@
+bin/
+.envrc
+.out
+.exe
+.so
+.DS_Store
+.test
+go.work
+go.work.sum
+.dll
+.dylib

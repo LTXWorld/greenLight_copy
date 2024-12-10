@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: greenlight
+      POSTGRES_PASSWORD: iutaol123
+      POSTGRES_DB: greenlight
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      GREENLIGHT_DB_DSN: postgres://greenlight:iutaol123@db/greenlight?sslmode=disable
+    ports:
+      - "4066:4066"
+
+volumes:
+  db_data:
