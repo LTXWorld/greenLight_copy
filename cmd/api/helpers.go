@@ -78,24 +78,28 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 		//var invalidUnmarshalError *json.InvalidUnmarshalError
 
 		switch {
-		// JSON格式不正确时，少括号多引号等`{"name": "John Doe", "age": 30,}`
-		case strings.Contains(err.Error(), "invalid character"):
-			return fmt.Errorf("body contains badly-formed JSON (at character %d)", err)
+		//// JSON格式不正确时，少括号多引号等`{"name": "John Doe", "age": 30,}`
+		//case strings.Contains(err.Error(), "invalid character"):
+		//	return fmt.Errorf("body contains badly-formed JSON (at character %d)", err)
 
 		// errors.Is用于判断错误是否匹配
 		// JSON在解析过程中意外结束——数据不完整中途截断`{"name": "John Doe", "age": 30`
-		case errors.Is(err, io.ErrUnexpectedEOF):
+		case strings.Contains(err.Error(), "struct"):
 			return errors.New("body contains badly-formed JSON")
 
 		// JSON数据的类型不正确，字段类型与Go结构体定义类型不匹配，可以捕捉具体的不匹配类型
-		case strings.Contains(err.Error(), "Password"):
-			//if unmarshalTypeError.Field != "" {
-			//	return fmt.Errorf("body contains incorrect JSON type for field %q", unmarshalTypeError.Field)
-			//}
-			//return fmt.Errorf("body contains incorrect JSON type (at character %d)", unmarshalTypeError.Offset)
-			if strings.Contains(err.Error(), "Password") {
-				return fmt.Errorf("body contains incorrect JSON type for field \"password\"")
+		case strings.Contains(err.Error(), "ReadString"):
+			// 尝试从错误信息中提取字段名称
+			errorMsg := err.Error()
+
+			// 找到第一个冒号的位置
+			colonIndex := strings.Index(errorMsg, ":")
+			if colonIndex > 0 {
+				// 提取字段名称（从起始到第一个冒号前的部分）
+				fieldName := errorMsg[:colonIndex]
+				return fmt.Errorf("body contains incorrect JSON type for field %q", fieldName)
 			}
+			// 如果未成功提取字段名称，则返回通用错误
 			return fmt.Errorf("body contains incorrect JSON type: %v", err)
 
 		// JSON数据体为空
