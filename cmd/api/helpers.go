@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/LTXWorld/greenLight_copy/internal/validator"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"net/http"
@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // 从当前请求上下文中获取用户id
 func (app *application) readIDParam(r *http.Request) (int64, error) {
@@ -34,7 +36,8 @@ type envelop map[string]interface{}
 // 用来将数据写成JSON格式返回给用户，包括了状态码，要传输的被封装过的数据，http头部的map包括任何想要在这个响应中添加的http头部
 func (app *application) writeJSON(w http.ResponseWriter, status int, data envelop, headers http.Header) error {
 	// Encode the data to JSON，使用MarshalIndent增加空格，使格式更好看
-	js, err := json.MarshalIndent(data, "", "\t")
+	// 因为使用json-iterator所以将这里的indent换为四个空格，其源码指定indent can only be space
+	js, err := json.MarshalIndent(data, "", "    ")
 	if err != nil {
 		return err
 	}
@@ -70,15 +73,14 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 	err := dec.Decode(dst)
 	if err != nil {
 		// 对错误进行分类
-		var syntaxError *json.SyntaxError
-		var unmarshalTypeError *json.UnmarshalTypeError
-		var invalidUnmarshalError *json.InvalidUnmarshalError
+		//var syntaxError *json.SyntaxError
+		//var unmarshalTypeError *json.UnmarshalTypeError
+		//var invalidUnmarshalError *json.InvalidUnmarshalError
 
 		switch {
-		// 使用errors.As函数检查错误类型
 		// JSON格式不正确时，少括号多引号等`{"name": "John Doe", "age": 30,}`
-		case errors.As(err, &syntaxError):
-			return fmt.Errorf("body contains badly-formed JSON (at character %d)", syntaxError.Offset)
+		case strings.Contains(err.Error(), "invalid character"):
+			return fmt.Errorf("body contains badly-formed JSON (at character %d)", err)
 
 		// errors.Is用于判断错误是否匹配
 		// JSON在解析过程中意外结束——数据不完整中途截断`{"name": "John Doe", "age": 30`
@@ -86,11 +88,12 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 			return errors.New("body contains badly-formed JSON")
 
 		// JSON数据的类型不正确，字段类型与Go结构体定义类型不匹配，可以捕捉具体的不匹配类型
-		case errors.As(err, &unmarshalTypeError):
-			if unmarshalTypeError.Field != "" {
-				return fmt.Errorf("body contains incorrect JSON type for field %q", unmarshalTypeError.Field)
-			}
-			return fmt.Errorf("body contains incorrect JSON type (at character %d)", unmarshalTypeError.Offset)
+		case strings.Contains(err.Error(), "cannot unmarshal"):
+			//if unmarshalTypeError.Field != "" {
+			//	return fmt.Errorf("body contains incorrect JSON type for field %q", unmarshalTypeError.Field)
+			//}
+			//return fmt.Errorf("body contains incorrect JSON type (at character %d)", unmarshalTypeError.Offset)
+			return fmt.Errorf("body contains incorrect JSON type: %v", err)
 
 		// JSON数据体为空
 		case errors.Is(err, io.EOF):
@@ -106,9 +109,9 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 		case err.Error() == "http: request body too large":
 			return fmt.Errorf("body must not be larger than %d bytes", maxBytes)
 
-		// 反序列化时保存目标不是非空指针,这是不应发生且我们没有准备好妥善处理的错误，故使用Panic。
-		case errors.As(err, &invalidUnmarshalError):
-			panic(err)
+		//// 反序列化时保存目标不是非空指针,这是不应发生且我们没有准备好妥善处理的错误，故使用Panic。
+		//case errors.As(err, &invalidUnmarshalError):
+		//	panic(err)
 		// 其他情况返回错误信息即可
 		default:
 			return err
