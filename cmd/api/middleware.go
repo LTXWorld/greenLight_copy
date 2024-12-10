@@ -29,19 +29,23 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
+// rateLimit限流中间件
 func (app *application) rateLimit(next http.Handler) http.Handler {
-	// 定义一个client结构体包括limiter和最后出现时间
+	// 定义一个client结构体用于记录客户端的limiter和最后出现时间
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
 	}
+
 	// Declare a mutex and a map to hold the clients' IP addresses and rate limiters&time
+	// 内存中的速率限制器映射:客户端IP为键，客户端为值
 	var (
 		mu      sync.Mutex
 		clients = make(map[string]*client)
 	)
 
 	// Launch a background goroutine which removes old entries from the clients map every minute
+	// 启用一个后台协程移除旧的键值对
 	go func() {
 		for {
 			time.Sleep(time.Minute)
@@ -58,10 +62,6 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 			mu.Unlock()
 		}
 	}()
-
-	//// Initialize a new rate limiter allows an average of 2 requests per second
-	//// with a maximum of 4 requests in a single 'burst'
-	//limiter := rate.NewLimiter(2, 4)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only carry out the check if rate limiting is enabled

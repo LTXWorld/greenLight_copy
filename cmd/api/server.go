@@ -36,7 +36,7 @@ func (app *application) serve() error {
 		quit := make(chan os.Signal, 1)
 
 		// Use signal.Notify to listen for incoming SIGINT and SIGTERM signals
-		// and rely them to the quit channel
+		// and rely on them to the quit channel
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 		// Read the signal from the quit channel, This code will block until a signal is received

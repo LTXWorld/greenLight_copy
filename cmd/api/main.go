@@ -78,6 +78,7 @@ func main() {
 	//flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
 	//cfg.db.dsn = "postgres://greenlight:iutaol123@localhost/greenlight?sslmode=disable"
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	fmt.Println("Using Database DSN:", cfg.db.dsn)
 
 	// 配置连接池
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")

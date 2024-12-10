@@ -30,13 +30,13 @@ run/api:
 db/psql:
 	psql ${GREENLIGHT_DB_DSN}
 
-## db/migrations/new name=$1: create a new database migration
+## db/migrations/new name=$1: create a new database migration 生成迁移文件
 .PHONY:db/migration/new
 db/migration/new:
 	@echo 'Creating migration files for ${name}...'
 	migrate create -seq -ext=.sql -dir=./migrations ${name}
 
-## db/migration/up: apply all up database migrations
+## db/migration/up: apply all up database migrations 运行迁移
 .PHONY: db/migration/up
 db/migration/up: confirm
 	@echo 'Running up migrations...'

@@ -21,7 +21,7 @@ type Movie struct {
 }
 
 type MovieModel struct {
-	DB *sql.DB
+	DB *sql.DB // 这里实现了依赖注入，注入不同的DB实现，可以更好的进行模拟测试和更换数据库驱动类型
 }
 
 // Insert 这些CRUD方法的接收者没有使用指针类型是因为——一般只有需要更改接收者结构体中的字段时（或者结构体太大复制开销大）
@@ -38,10 +38,11 @@ func (m MovieModel) Insert(movie *Movie) error {
 	args := []interface{}{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
 
 	// Create a context with a 3-second timeout
+	// 如果数据库操作在3s内没有完成，操作自动取消，返回超时错误
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
 
-	// 使用QueryRow方法执行,并使用Scan方法将返回值注入到movie的三个属性中
+	// 使用QueryRowContext方法执行,利用传入的ctx进行SQL查询，并使用Scan方法将返回值注入到movie的三个属性中
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
@@ -139,6 +140,7 @@ func (m MovieModel) Delete(id int64) error {
 	defer cancle()
 
 	// Execute the SQL query using the Exec method
+	// 执行不返回任何行记录的SQL，返回的是sq.Result接口对象，包括了LastInsertId和RowsAffected方法
 	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err

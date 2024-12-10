@@ -20,7 +20,8 @@ type Models struct {
 	Permissions PermissionModel
 }
 
-// 为了方便使用，写一个New方法初始化一个Modles结构体
+// 工厂函数，为了方便使用，写一个New方法初始化一个Modles结构体，
+// 这里传入了db，实现了依赖注入，数据库连接sql.DB注入到每个模型中——外部负责初始化数据库，通过依赖注入传入(sql.Open那里)
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Movies:      MovieModel{DB: db},
