@@ -73,7 +73,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 	err := dec.Decode(dst)
 	if err != nil {
 		// 对错误进行分类
-		//var syntaxError *json.SyntaxError
+		//var syntaxError json.SyntaxError
 		//var unmarshalTypeError *json.UnmarshalTypeError
 		//var invalidUnmarshalError *json.InvalidUnmarshalError
 
@@ -88,11 +88,14 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst int
 			return errors.New("body contains badly-formed JSON")
 
 		// JSON数据的类型不正确，字段类型与Go结构体定义类型不匹配，可以捕捉具体的不匹配类型
-		case strings.Contains(err.Error(), "cannot unmarshal"):
+		case strings.Contains(err.Error(), "Password"):
 			//if unmarshalTypeError.Field != "" {
 			//	return fmt.Errorf("body contains incorrect JSON type for field %q", unmarshalTypeError.Field)
 			//}
 			//return fmt.Errorf("body contains incorrect JSON type (at character %d)", unmarshalTypeError.Offset)
+			if strings.Contains(err.Error(), "Password") {
+				return fmt.Errorf("body contains incorrect JSON type for field \"password\"")
+			}
 			return fmt.Errorf("body contains incorrect JSON type: %v", err)
 
 		// JSON数据体为空
